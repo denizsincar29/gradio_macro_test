@@ -1,0 +1,57 @@
+# Endpoint: /predict_1
+args:
+- Audio file: inputs(object, )
+    - component: Audio
+Example:
+```
+{"meta":{"_type":"gradio.FileData"},"orig_name":"audio_sample.wav","path":"https://github.com/gradio-app/gradio/raw/main/test/test_files/audio_sample.wav","url":"https://github.com/gradio-app/gradio/raw/main/test/test_files/audio_sample.wav"}
+
+```
+
+- Task: task(string, )
+    - default: "transcribe"
+    - component: Radio
+Example:
+```
+"transcribe"
+
+```
+
+# Endpoint: /predict_2
+args:
+- YouTube URL: yt_url(string, )
+    - component: Textbox
+Example:
+```
+"Hello!!"
+
+```
+
+- Task: task(string, )
+    - default: "transcribe"
+    - component: Radio
+Example:
+```
+"transcribe"
+
+```
+
+# Endpoint: /predict
+args:
+- parameter_1: inputs(object, )
+    - component: Audio
+Example:
+```
+{"meta":{"_type":"gradio.FileData"},"orig_name":"audio_sample.wav","path":"https://github.com/gradio-app/gradio/raw/main/test/test_files/audio_sample.wav","url":"https://github.com/gradio-app/gradio/raw/main/test/test_files/audio_sample.wav"}
+
+```
+
+- Task: task(string, )
+    - default: "transcribe"
+    - component: Radio
+Example:
+```
+"transcribe"
+
+```
+

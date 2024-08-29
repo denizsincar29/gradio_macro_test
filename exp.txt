@@ -1,0 +1,72 @@
+#![feature(prelude_import)]
+#[prelude_import]
+use std::prelude::rust_2021::*;
+#[macro_use]
+extern crate std;
+use gradio_macro::gradio_api;
+fn main() {
+    pub struct ApiHfAudioWhisperLargeV3 {
+        client: gradio::Client,
+    }
+    impl ApiHfAudioWhisperLargeV3 {
+        pub fn new() -> Result<Self, ()> {
+            let client = gradio::Client::new_sync(
+                    "hf-audio/whisper-large-v3",
+                    gradio::ClientOptions::default(),
+                )
+                .unwrap();
+            Ok(Self { client })
+        }
+        pub fn predict_1(
+            &self,
+            audio_file: impl Into<std::path::PathBuf>,
+            task: impl serde::Serialize,
+        ) -> Result<Vec<gradio::PredictionOutput>, anyhow::Error> {
+            self.client
+                .predict_sync(
+                    "/predict_1",
+                    <[_]>::into_vec(
+                        #[rustc_box]
+                        ::alloc::boxed::Box::new([
+                            gradio::PredictionInput::from_file(audio_file).into(),
+                            gradio::PredictionInput::from_value(task).into(),
+                        ]),
+                    ),
+                )
+        }
+        pub fn predict(
+            &self,
+            parameter_1: impl Into<std::path::PathBuf>,
+            task: impl serde::Serialize,
+        ) -> Result<Vec<gradio::PredictionOutput>, anyhow::Error> {
+            self.client
+                .predict_sync(
+                    "/predict",
+                    <[_]>::into_vec(
+                        #[rustc_box]
+                        ::alloc::boxed::Box::new([
+                            gradio::PredictionInput::from_file(parameter_1).into(),
+                            gradio::PredictionInput::from_value(task).into(),
+                        ]),
+                    ),
+                )
+        }
+        pub fn predict_2(
+            &self,
+            youtube_url: impl serde::Serialize,
+            task: impl serde::Serialize,
+        ) -> Result<Vec<gradio::PredictionOutput>, anyhow::Error> {
+            self.client
+                .predict_sync(
+                    "/predict_2",
+                    <[_]>::into_vec(
+                        #[rustc_box]
+                        ::alloc::boxed::Box::new([
+                            gradio::PredictionInput::from_value(youtube_url).into(),
+                            gradio::PredictionInput::from_value(task).into(),
+                        ]),
+                    ),
+                )
+        }
+    }
+}
