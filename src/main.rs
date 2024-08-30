@@ -9,10 +9,13 @@ use gradio_macro::gradio_api;
 use serde_json::Value;
 
 // The macro generates the api struct for you, so you don't need to write the struct yourself.
-gradio_api!{"hf-audio/whisper-large-v3"}
+gradio_api!("hf-audio/whisper-large-v3");
+gradio_api!("JacobLinCool/vocal-separation");
 
 
-fn main() {
+#[cfg(feature = "whisper")]
+fn whisper_main() {
+    println!("Whisper Large V3");
     // this struct is autonamed by the macro. To get the name, start typing the word "Api" and the IDE will show you the name.
     let whisper= ApiHfAudioWhisperLargeV3::new_sync(gradio::ClientOptions::default()).unwrap();
     let result=whisper.predict_sync("english.wav", "transcribe").unwrap()[0].clone().as_value().unwrap();
@@ -31,4 +34,29 @@ fn main() {
     println!("{:?}", result);
     */
 
+}
+
+#[cfg(feature = "vocal")]
+fn vocal_main(){
+    println!("Vocal Separation");
+    let vocal = ApiJacoblincoolVocalSeparation::new_sync(gradio::ClientOptions::default()).unwrap();
+    let result = vocal.separate_sync("tunisia.wav", "BS-RoFormer").unwrap();  // A night in Tunisia - Ella Fitzgerald
+    let vocals=result[0].clone().as_file().unwrap().download_sync(None).unwrap();
+    let accompaniment=result[1].clone().as_file().unwrap().download_sync(None).unwrap();
+    // they are bytes, lets save them to disk
+    std::fs::write("vocals.wav", vocals).unwrap();
+    std::fs::write("accompaniment.wav", accompaniment).unwrap();
+}
+
+fn main() {
+    #[cfg(feature = "whisper")]
+    whisper_main();
+    #[cfg(feature = "vocal")]
+    vocal_main();
+    // if none of the features, run both
+    #[cfg(not(any(feature = "whisper", feature = "vocal")))]
+    {
+        whisper_main();
+        vocal_main();
+    }
 }
