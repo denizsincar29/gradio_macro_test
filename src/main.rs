@@ -14,8 +14,8 @@ gradio_api!{"hf-audio/whisper-large-v3"}
 
 fn main() {
     // this struct is autonamed by the macro. To get the name, start typing the word "Api" and the IDE will show you the name.
-    let whisper= ApiHfAudioWhisperLargeV3::new().unwrap();
-    let result=whisper.predict("english.wav", "transcribe").unwrap()[0].clone().as_value().unwrap();
+    let whisper= ApiHfAudioWhisperLargeV3::new_sync(gradio::ClientOptions::default()).unwrap();
+    let result=whisper.predict_sync("english.wav", "transcribe").unwrap()[0].clone().as_value().unwrap();
     match &result {
         Value::String(val) => println!("{}", val),
         _ => panic!("Unexpected result: {:?}", &result.clone()),

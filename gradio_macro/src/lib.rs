@@ -47,6 +47,7 @@ fn to_snake_case(input: &str) -> String {
     // Join the parts together with underscores
     snake_case_parts.join("_")
 }
+
 #[proc_macro]
 pub fn gradio_api(input: TokenStream) -> TokenStream {
     let input=parse_macro_input!(input as LitStr);
@@ -64,7 +65,8 @@ pub fn gradio_api(input: TokenStream) -> TokenStream {
     let mut functions: Vec<proc_macro2::TokenStream>=Vec::new(); // this will be the pub functions in the impl block as tokenstreams
     for (name, info) in api.iter() {
         // this will be the pub function in the impl block
-        let method_name=Ident::new(&to_snake_case(&name), Span::call_site());
+        let method_name = Ident::new(&to_snake_case(&name), Span::call_site());
+        let method_name_sync = Ident::new(&to_snake_case(&format!("{}_sync", &name)[..]), Span::call_site());
         // args is a vector of quote!{argument: type}
         let (args, args_call): (Vec<proc_macro2::TokenStream>, Vec<proc_macro2::TokenStream>) = info.parameters.iter().enumerate().map(|(i, arg)| {
             let (_arg_name, arg_ident) = match &arg.label {
@@ -89,8 +91,11 @@ pub fn gradio_api(input: TokenStream) -> TokenStream {
         }).collect(); // end of args (map)
         // lets build pub fn with the args
         let function: TokenStream=quote! {
-            pub fn #method_name(&self, #(#args),*) -> Result<Vec<gradio::PredictionOutput>, anyhow::Error> {
+            pub fn #method_name_sync(&self, #(#args),*) -> Result<Vec<gradio::PredictionOutput>, anyhow::Error> {
                 self.client.predict_sync(#name, vec![#(#args_call.into()),*])
+            }
+            pub async fn #method_name(&self, #(#args),*) -> Result<Vec<gradio::PredictionOutput>, anyhow::Error> {
+                self.client.predict(#name, vec![#(#args_call.into()),*]).await
             }
         }.into();  // end of quote!{function}
         functions.push(function.into());
@@ -102,9 +107,18 @@ pub fn gradio_api(input: TokenStream) -> TokenStream {
             client: gradio::Client
         }
         impl #struct_name {
-            pub fn new() -> Result<Self, ()> {
-                let client= gradio::Client::new_sync(#input, gradio::ClientOptions::default()).unwrap();
-                Ok(Self { client })
+            pub fn new_sync(options: gradio::ClientOptions) -> Result<Self, ()> {
+                match gradio::Client::new_sync(#input, options) {
+                    Ok(client) => Ok(Self { client }),
+                    Err(_) => Err(())
+                }
+            }
+            // async
+            pub async fn new(options: gradio::ClientOptions) -> Result<Self, ()> {
+                match gradio::Client::new(#input, options).await {
+                    Ok(client) => Ok(Self { client }),
+                    Err(_) => Err(())
+                }
             }
             #(#functions)*
         }
