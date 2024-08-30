@@ -31,13 +31,13 @@ fn main(){
 
 ## How it works
 
-The struct uses the (gradio)[https://crates.io/crates/gradio] crate to generate the api struct. The macro generates the struct for you, so you don't need to write it yourself. The struct is named after the model name, and the fields are named after the input and output names.
+The struct uses the [gradio](https://crates.io/crates/gradio) crate to generate the api struct. The macro generates the struct for you, so you don't need to write it yourself. The struct is named after the model name, and the fields are named after the input and output names.
 The methods of the struct are just snake_cased endpoint names. The arg names are also got from the spec.
 
 ## Limitations
 
 The macro still doesn't have async and submit support, but it can be added easily later. Also the prediction outputs are a bit complex to handle due to there dynamic nature. The macro uses serde_json to handle the outputs, but it can be improved later.
 
-## credits
+## Credits
 
-Big Thanks to [Jacob Lin]https://github.com/JacobLinCool) for the idea and the help.
+Big Thanks to [Jacob Lin](https://github.com/JacobLinCool) for the idea and the help.
