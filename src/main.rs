@@ -14,6 +14,11 @@ gradio_api!("JacobLinCool/vocal-separation");
 
 fn show_progress(stream: &mut gradio::PredictionStream) -> Option<Vec<PredictionOutput>> {
     while let Some(message) = stream.next_sync() {
+        if let Err(val) = message {
+            eprintln!("Error: {:?}", val);
+            continue;
+            // return None;  // skip the error and continue
+        }
         match message.unwrap() {
             QueueDataMessage::Open => println!("Task started"),
             QueueDataMessage::Progress { event_id, eta, progress_data } => {
