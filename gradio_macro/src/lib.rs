@@ -6,7 +6,6 @@ use proc_macro2::{Ident, Span};
 use proc_macro::TokenStream;
 use syn::{parse_macro_input, LitStr};
 use quote::quote;
-
 fn to_camel_case(input: &str) -> String {
     // Split the input string by non-alphanumeric characters using a regex
     let re = regex::Regex::new(r"[^a-zA-Z0-9]+").unwrap();
@@ -67,6 +66,8 @@ pub fn gradio_api(input: TokenStream) -> TokenStream {
         // this will be the pub function in the impl block
         let method_name = Ident::new(&to_snake_case(&name), Span::call_site());
         let method_name_sync = Ident::new(&to_snake_case(&format!("{}_sync", &name)[..]), Span::call_site());
+        let method_name_background = Ident::new(&to_snake_case(&format!("{}_background", &name)[..]), Span::call_site());
+        let method_name_background_sync = Ident::new(&to_snake_case(&format!("{}_background_sync", &name)[..]), Span::call_site());
         // args is a vector of quote!{argument: type}
         let (args, args_call): (Vec<proc_macro2::TokenStream>, Vec<proc_macro2::TokenStream>) = info.parameters.iter().enumerate().map(|(i, arg)| {
             let (_arg_name, arg_ident) = match &arg.label {
@@ -93,6 +94,12 @@ pub fn gradio_api(input: TokenStream) -> TokenStream {
         let function: TokenStream=quote! {
             pub fn #method_name_sync(&self, #(#args),*) -> Result<Vec<gradio::PredictionOutput>, anyhow::Error> {
                 self.client.predict_sync(#name, vec![#(#args_call.into()),*])
+            }
+            pub async fn #method_name_background(&self, #(#args),*) -> Result<gradio::PredictionStream, anyhow::Error> {
+                self.client.submit(#name, vec![#(#args_call.into()),*]).await
+            }
+            pub fn #method_name_background_sync(&self, #(#args),*) -> Result<gradio::PredictionStream, anyhow::Error> {
+                self.client.submit_sync(#name, vec![#(#args_call.into()),*])
             }
             pub async fn #method_name(&self, #(#args),*) -> Result<Vec<gradio::PredictionOutput>, anyhow::Error> {
                 self.client.predict(#name, vec![#(#args_call.into()),*]).await
