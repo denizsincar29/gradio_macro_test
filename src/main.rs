@@ -12,8 +12,8 @@ use gradio_macro::gradio_api;
 gradio_api!("hf-audio/whisper-large-v3");
 gradio_api!("JacobLinCool/vocal-separation");
 
-fn show_progress(stream: &mut gradio::PredictionStream) -> Option<Vec<PredictionOutput>> {
-    while let Some(message) = stream.next_sync() {
+async fn show_progress(stream: &mut gradio::PredictionStream) -> Option<Vec<PredictionOutput>> {
+    while let Some(message) = stream.next().await {
         if let Err(val) = message {
             eprintln!("Error: {:?}", val);
             continue;
@@ -63,12 +63,18 @@ fn show_progress(stream: &mut gradio::PredictionStream) -> Option<Vec<Prediction
 }
 
 #[allow(unused)]
-fn whisper_main() {
+async fn download_file(file: gradio::GradioFileData, filename: &str) {
+    tokio::fs::write(filename, file.download(None).await.unwrap()).await.unwrap();
+    println!("File downloaded: {}", filename);
+}
+
+#[allow(unused)]
+async fn whisper_main() {
     println!("Whisper Large V3");
     // this struct is autonamed by the macro. To get the name, start typing the word "Api" and the IDE will show you the name.
-    let whisper= ApiHfAudioWhisperLargeV3::new_sync(gradio::ClientOptions::default()).unwrap();
-    let mut result=whisper.predict_background_sync("english.wav", "transcribe").unwrap();
-    let mut result=show_progress(&mut result);
+    let whisper= ApiHfAudioWhisperLargeV3::new(gradio::ClientOptions::default()).await.unwrap();
+    let mut result=whisper.predict_background("english.wav", "transcribe").await.unwrap();
+    let mut result=show_progress(&mut result).await;
     match &result {
         Some(result) => {
             let result=result[0].clone().as_value().unwrap();
@@ -83,28 +89,34 @@ fn whisper_main() {
 }
 
 #[allow(unused)]
-fn vocal_main(){
+async fn vocal_main(){
     println!("Vocal Separation");
-    let vocal = ApiJacoblincoolVocalSeparation::new_sync(gradio::ClientOptions::default()).unwrap();
-    let mut task = vocal.separate_background_sync("tunisia.wav", "BS-RoFormer").unwrap();
-    let mut result = show_progress(&mut task).unwrap();
+    let vocal = ApiJacoblincoolVocalSeparation::new(gradio::ClientOptions::default()).await.unwrap();
+    let mut task = vocal.separate_background("tunisia.wav", "BS-RoFormer").await.unwrap();
+    let mut result = show_progress(&mut task).await.unwrap();
     // the result is vec of files. 0 is vocals, 1 is background
     let vocals = result[0].clone().as_file().unwrap();
     let background = result[1].clone().as_file().unwrap();
-    std::fs::write("vocals.wav", vocals.download_sync(None).unwrap());
-    std::fs::write("background.wav", background.download_sync(None).unwrap());
+    // we are true async programmers, right? so we will write the files in parallel
+    let vocals_task = tokio::spawn(download_file(vocals, "vocals.wav"));
+    let background_task = tokio::spawn(download_file(background, "background.wav"));
+    let _ = tokio::join!(vocals_task, background_task);
+    
+    
 
 }
 
-fn main() {
+// Dear kids, if you don't know what the capital of japan is doing in the code, it's a little thingy to run async functions.
+#[tokio::main]
+async fn main() {
     #[cfg(feature = "whisper")]
-    whisper_main();
+    whisper_main().await;
     #[cfg(feature = "vocal")]
-    vocal_main();
+    vocal_main().await;
     // if none of the features, run both
     #[cfg(not(any(feature = "whisper", feature = "vocal")))]
     {
-        whisper_main();
-        vocal_main();
+        whisper_main().await;
+        vocal_main().await;
     }
 }

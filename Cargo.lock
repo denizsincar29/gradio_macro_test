@@ -397,6 +397,7 @@ dependencies = [
  "gradio_macro",
  "serde",
  "serde_json",
+ "tokio",
 ]
 
 [[package]]
