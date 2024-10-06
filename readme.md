@@ -4,11 +4,11 @@ a simple macro that generates api code for gradio rust crate.
 
 ## Usage
 
-First, to run the macro, you need to have the gradio_macro crate in your project. For now, it's a local crate, so you'll need to add it via a path, as there's no Git repository yet.
+First, to run the macro, you need to have the gradio_macro crate in your project.
 
 ```toml
 [dependencies]
-gradio_macro = { path = "path/to/gradio_macro" }
+gradio_macro = 0.1.0
 # You will also need serde and serde_json for handling API data, though this may be removed in the future.
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
