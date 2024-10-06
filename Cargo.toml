@@ -2,10 +2,13 @@
 name = "gradio_macro"
 description = "A macro for generating Gradio interfaces."
 version = "0.1.0"
+authors = ["Deniz Sincar <deniz@r1oaz.ru>"]
 edition = "2021"
 repository = "https://github.com/denizsincar29/gradio_macro_test"
-license = "mit"
-
+readme = "README.md"
+license = "MIT"
+keywords = ["gradio", "macro", "ai", "huggingface"]
+exclude = ["wavs/"]
 [dependencies]
 anyhow = "1.0.86"
 gradio = "0.3.0"
