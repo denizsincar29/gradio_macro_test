@@ -1,7 +1,10 @@
 [package]
 name = "gradio_macro"
+description = "A macro for generating Gradio interfaces."
 version = "0.1.0"
 edition = "2021"
+repository = "https://github.com/denizsincar29/gradio_macro_test"
+license = "mit"
 
 [dependencies]
 anyhow = "1.0.86"

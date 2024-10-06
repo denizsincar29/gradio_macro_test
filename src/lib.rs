@@ -14,6 +14,53 @@ fn make_compile_error(message: &str) -> TokenStream {
     syn::Error::new(Span::call_site(), message).to_compile_error().into()
 }
 
+/// A procedural macro for generating API client structs and methods for interacting with a Gradio-based API.
+///
+/// This macro generates a client struct for the specified Gradio API, along with methods to call the API endpoints
+/// synchronously or asynchronously, depending on the provided option.
+///
+/// # Macro Parameters
+///
+/// - `url`: **Required**. The base URL of the Gradio API. This is the endpoint that the generated client will interact with.
+/// - `option`: **Required**. Specifies whether the generated API methods should be synchronous or asynchronous.
+///   - `"sync"`: Generates synchronous methods for interacting with the API.
+///   - `"async"`: Generates asynchronous methods for interacting with the API.
+///
+/// # Usage
+///
+/// The macro will generate the API struct and methods for you automatically, so you don't need to manually define the struct.
+///
+/// ```rust
+/// use gradio_macro::gradio_api;
+///
+/// // Define the API client using the macro
+/// #[gradio_api(url = "hf-audio/whisper-large-v3-turbo", option = "async")]
+/// pub struct WhisperLarge;
+///
+/// #[tokio::main]
+/// async fn main() {
+///     println!("Whisper Large V3 turbo");
+///
+///     // Instantiate the API client
+///     let whisper = WhisperLarge::new(gradio::ClientOptions::default()).await.unwrap();
+///
+///     // Call the API's predict method with input arguments
+///     let mut result = whisper.predict("wavs/english.wav", "transcribe").await.unwrap();
+///
+///     // Handle the result
+///     let result = result[0].clone().as_value().unwrap();
+///     std::fs::write("result.txt", format!("{}", result)).expect("Can't write to file");
+///     println!("result written to result.txt");
+/// }
+/// ```
+///
+/// This example shows how to define and use an asynchronous client with the `gradio_api` macro. 
+/// The API methods will be generated automatically, and you can call them using `.await` to handle asynchronous responses.
+///
+/// # Generated Methods
+///
+/// - For each API endpoint, an asynchronous method is generated that returns a `Result` wrapped in a `Future`.
+/// - You can await the result of these methods and handle success or failure as shown in the example.
 #[proc_macro_attribute]
 pub fn gradio_api(args: TokenStream, input: TokenStream) -> TokenStream {
     let args = parse_macro_input!(args with Punctuated::<Meta, syn::Token![,]>::parse_terminated);
