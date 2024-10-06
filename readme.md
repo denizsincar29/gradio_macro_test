@@ -8,7 +8,7 @@ First, to run the macro, you need to have the gradio_macro crate in your project
 
 ```toml
 [dependencies]
-gradio_macro = "0.1"
+gradio_macro = "0.2"
 # You will also need serde and serde_json for handling API data, though this may be removed in the future.
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
