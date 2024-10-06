@@ -5,14 +5,16 @@
 // notice 2: for some reason, the macro relies on serde and serde_json crate, so cargo add them to the project where you use the macro.
 // we highly recommend to use an IDE that supports rust analyzer to determin the api struct methods since the api is generated in compile time.
 
+use std::fs;
+
 use gradio::{structs::QueueDataMessage, PredictionOutput, PredictionStream};
 use gradio_macro::gradio_api;
 
 
 // The macro generates the api struct for you, so you don't need to write the struct yourself.
-// gradio_api!("hf-audio/whisper-large-v3");
-#[gradio_api(url = "hf-audio/whisper-large-v3", option = "async")]
-pub struct ApiHfAudioWhisperLargeV3;
+#[gradio_api(url = "hf-audio/whisper-large-v3-turbo", option = "async")]
+pub struct WhisperLarge;
+
 pub async fn show_progress(stream: &mut PredictionStream) -> Option<Vec<PredictionOutput>> {
     while let Some(message) = stream.next().await {
         if let Err(val) = message {
@@ -66,15 +68,16 @@ pub async fn show_progress(stream: &mut PredictionStream) -> Option<Vec<Predicti
 // Dear kids, if you don't know what the capital of japan is doing in the code, it's a little thingy to run async functions.
 #[tokio::main]
 async fn main() {
-    println!("Whisper Large V3");
-    // this struct is autonamed by the macro. To get the name, start typing the word "Api" and the IDE will show you the name.
-    let whisper= ApiHfAudioWhisperLargeV3::new(gradio::ClientOptions::default()).await.unwrap();
-    let mut result=whisper.predict_background("english.wav", "transcribe").await.unwrap();
+    println!("Whisper Large V3 turbo");
+    let whisper= WhisperLarge::new(gradio::ClientOptions::default()).await.unwrap();
+    // warning! This video, rust in 100 seconds, is somewhere transcribed incorrectly by whisper-jax, especially the name of the rust founder.
+    let mut result=whisper.predict_background("wavs/english.wav", "transcribe").await.unwrap();
     let result=show_progress(&mut result).await;
     match &result {
         Some(result) => {
             let result=result[0].clone().as_value().unwrap();
-            println!("Transcription: {}", result);
+            fs::write("result.txt", format!("{}", result)).expect("Can't write to file");
+            println!("result written to result.txt");
         },
         None => {
             println!("Failed to transcribe");

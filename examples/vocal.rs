@@ -11,7 +11,7 @@ use gradio_macro::gradio_api;
 
 // The macro generates the api struct for you, so you don't need to write the struct yourself.
 #[gradio_api(url = "jacoblincool/vocal-separation", option = "async")]
-pub struct ApiJacoblincoolVocalSeparation;
+pub struct VocalSeparation;
 
 pub async fn show_progress(stream: &mut PredictionStream) -> Option<Vec<PredictionOutput>> {
     while let Some(message) = stream.next().await {
@@ -74,8 +74,8 @@ async fn download_file(file: gradio::GradioFileData, filename: &str) {
 #[tokio::main]
 async fn main(){
     println!("Vocal Separation");
-    let vocal = ApiJacoblincoolVocalSeparation::new(gradio::ClientOptions::default()).await.unwrap();
-    let mut task = vocal.from_youtube_background("tunisia.wav", "BS-RoFormer").await.unwrap();
+    let vocal = VocalSeparation::new(gradio::ClientOptions::default()).await.unwrap();
+    let mut task = vocal.separate_background("wavs/tunisia.wav", "BS-RoFormer").await.unwrap();
     let result = show_progress(&mut task).await.expect("Failed to separate vocals");
     // the result is vec of files. 0 is vocals, 1 is background
     let vocals = result[0].clone().as_file().unwrap();

@@ -1,22 +1,9 @@
+use heck::ToSnakeCase;
 use proc_macro2::{Ident, Span};
 use proc_macro::TokenStream;
 use syn::{parse_macro_input, punctuated::Punctuated, Expr, ItemStruct, Meta};
 use quote::quote;
 
-fn to_snake_case(input: &str) -> String {
-    let re = regex::Regex::new(r"[^a-zA-Z0-9]+").unwrap();
-    let parts: Vec<&str> = re.split(input).collect();
-    let snake_case_parts: Vec<String> = parts.iter()
-        .filter_map(|part| {
-            if part.is_empty() {
-                None
-            } else {
-                Some(part.to_lowercase())
-            }
-        })
-        .collect();
-    snake_case_parts.join("_")
-}
 
 enum Syncity {
     Sync,
@@ -63,12 +50,12 @@ pub fn gradio_api(args: TokenStream, input: TokenStream) -> TokenStream {
     // Generating the functions for the API
     let mut functions: Vec<proc_macro2::TokenStream> = Vec::new();
     for (name, info) in api.iter() {
-        let method_name = Ident::new(&to_snake_case(name), Span::call_site());
-        let background_name = Ident::new(&format!("{}_background", to_snake_case(name)), Span::call_site());
+        let method_name = Ident::new(&(name.to_snake_case()), Span::call_site());
+        let background_name = Ident::new(&format!("{}_background", name.to_snake_case()), Span::call_site());
 
         let (args, args_call): (Vec<proc_macro2::TokenStream>, Vec<proc_macro2::TokenStream>) = info.parameters.iter().enumerate().map(|(i, arg)| {
             let (_arg_name, arg_ident) = match &arg.label {
-                Some(label) => (label.clone(), Ident::new(&to_snake_case(label), Span::call_site())),
+                Some(label) => (label.clone(), Ident::new(&label.to_snake_case(), Span::call_site())),
                 None => (format!("arg{}", i), Ident::new(&format!("arg{}", i), Span::call_site())),
             };
             let is_file = arg.python_type.r#type == "filepath";
