@@ -69,7 +69,7 @@ pub async fn show_progress(stream: &mut PredictionStream) -> Option<Vec<Predicti
 #[tokio::main]
 async fn main() {
     println!("Whisper Large V3 turbo");
-    let whisper= WhisperLarge::new(gradio::ClientOptions::default()).await.unwrap();
+    let whisper= WhisperLarge::new().await.unwrap();
     // warning! This video, rust in 100 seconds, is somewhere transcribed incorrectly by whisper-jax, especially the name of the rust founder.
     let mut result=whisper.predict_background("wavs/english.wav", "transcribe").await.unwrap();
     let result=show_progress(&mut result).await;

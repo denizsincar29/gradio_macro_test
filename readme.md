@@ -8,7 +8,7 @@ First, to run the macro, you need to have the gradio_macro crate in your project
 
 ```toml
 [dependencies]
-gradio_macro = 0.1.0
+gradio_macro = "0.1"
 # You will also need serde and serde_json for handling API data, though this may be removed in the future.
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
@@ -28,7 +28,7 @@ async fn main() {
     println!("Whisper Large V3 turbo");
 
     // Instantiate the API client
-    let whisper = WhisperLarge::new(gradio::ClientOptions::default()).await.unwrap();
+    let whisper = WhisperLarge::new().await.unwrap();
 
     // Call the API's predict method with input arguments
     let result = whisper.predict("wavs/english.wav", "transcribe").await.unwrap();
@@ -54,9 +54,11 @@ In this example, the macro defines the WhisperLarge struct, which can be used to
 
 The struct uses the [gradio](https://crates.io/crates/gradio) crate to generate the api struct.
 The #[gradio_api(...)] attribute macro generates the struct for you, so you don't need to write it yourself.
-- The #[gradio_api(...)] attribute has two arguments: url and option.
+- The #[gradio_api(...)] attribute has two arguments: url and option, and 3 optional string arguments: hf_token, auth_username and auth_password for authorization on huggingface (experimental).
 - url can be either a full URL or a simple Hugging Face space identifier.
 - option can be "sync" or "async", depending on the nature of your codebase.
+- hf_token (optional) - huggingface token.
+- auth_username and auth_password (optional) - your huggingface credentials.
 - The methods of the struct are snake_cased versions of the API endpoint names, with an optional _background suffix for methods that are run in the background using async tasks.
 - The argument names are derived from the API spec.
 

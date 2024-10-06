@@ -1,3 +1,4 @@
+use gradio::ClientOptions;
 use heck::ToSnakeCase;
 use proc_macro2::{Ident, Span};
 use proc_macro::TokenStream;
@@ -42,7 +43,7 @@ fn make_compile_error(message: &str) -> TokenStream {
 ///     println!("Whisper Large V3 turbo");
 ///
 ///     // Instantiate the API client
-///     let whisper = WhisperLarge::new(gradio::ClientOptions::default()).await.unwrap();
+///     let whisper = WhisperLarge::new().await.unwrap();
 ///
 ///     // Call the API's predict method with input arguments
 ///     let mut result = whisper.predict("wavs/english.wav", "transcribe").await.unwrap();
@@ -65,7 +66,7 @@ fn make_compile_error(message: &str) -> TokenStream {
 pub fn gradio_api(args: TokenStream, input: TokenStream) -> TokenStream {
     let args = parse_macro_input!(args with Punctuated::<Meta, syn::Token![,]>::parse_terminated);
     let input = parse_macro_input!(input as ItemStruct);
-    let (mut url, mut option) = ("".to_string(), None);
+    let (mut url, mut option, mut grad_token, mut grad_login, mut grad_password) = (None, None, None, None, None);
 
     // Parsing macro arguments
     for item in args.iter() {
@@ -74,15 +75,32 @@ pub fn gradio_api(args: TokenStream, input: TokenStream) -> TokenStream {
         let syn::Lit::Str(ref lit_val) = lit_val.lit else {continue;};
         let arg_value = lit_val.value();
         if item.path().is_ident("url") {
-            url = arg_value;
+            url = Some(arg_value);
         } else if item.path().is_ident("option") {
             option = Some(if arg_value == "sync" { Syncity::Sync } else { Syncity::Async });
+        } else if item.path().is_ident("hf_token") {
+            grad_token = Some(arg_value);
+        } else if item.path().is_ident("auth_username") {
+            grad_login = Some(arg_value);
+        } else if item.path().is_ident("auth_password") {
+            grad_password = Some(arg_value);
         }
     }
 
     // Check if url is provided
-    if url.is_empty() {
+    if url.is_none() {
         return make_compile_error("url is required");
+    }
+    let mut grad_opts = ClientOptions::default();
+    let mut grad_auth = None;
+    if grad_token.is_some() {
+        grad_opts.hf_token = grad_token.clone();
+    }
+    if grad_login.is_some() ^ grad_password.is_some() {
+        return make_compile_error("Both login and password must be present!");
+    } else if grad_login.is_some() && grad_password.is_some() {
+        grad_auth = Some((grad_login.clone().unwrap(), grad_password.clone().unwrap()));
+        grad_opts.auth = grad_auth.clone();
     }
 
     // Check if option is provided
@@ -91,8 +109,23 @@ pub fn gradio_api(args: TokenStream, input: TokenStream) -> TokenStream {
     };
 
     // Fetching the API data
-    let client = gradio::Client::new_sync(&(url[..]), gradio::ClientOptions::default()).unwrap();
+    let client = gradio::Client::new_sync(&(url.clone().unwrap()[..]), grad_opts).unwrap();
     let api = client.view_api().named_endpoints;
+
+    //  generating the client options identifiers
+    let grad_auth_ts = if grad_auth.is_some() {
+        quote! {Some((#grad_login, #grad_password))}
+    } else { quote!{None}};
+    let grad_token_ts = if let Some(val) = grad_token {
+        quote! {Some(#val)}
+    } else { quote!{None}};
+    let grad_opts_ts = quote! {
+        gradio::ClientOptions {
+            auth: #grad_auth_ts,
+            hf_token: #grad_token_ts
+        }
+    };
+
 
     // Generating the functions for the API
     let mut functions: Vec<proc_macro2::TokenStream> = Vec::new();
@@ -112,8 +145,8 @@ pub fn gradio_api(args: TokenStream, input: TokenStream) -> TokenStream {
                 quote! { impl serde::Serialize }
             };
             (quote! { #arg_ident: #arg_type },
-             if is_file { quote! { gradio::PredictionInput::from_file(#arg_ident) } }
-             else { quote! { gradio::PredictionInput::from_value(#arg_ident) } })
+            if is_file { quote! { gradio::PredictionInput::from_file(#arg_ident) } }
+            else { quote! { gradio::PredictionInput::from_value(#arg_ident) } })
         }).collect();
 
         // Create sync or async functions depending on the `option`
@@ -156,8 +189,8 @@ pub fn gradio_api(args: TokenStream, input: TokenStream) -> TokenStream {
                 }
 
                 impl #struct_name {
-                    pub fn new_sync(options: gradio::ClientOptions) -> Result<Self, ()> {
-                        match gradio::Client::new_sync(#url, options) {
+                    pub fn new_sync() -> Result<Self, ()> {
+                        match gradio::Client::new_sync(#url, #grad_opts_ts) {
                             Ok(client) => Ok(Self { client }),
                             Err(_) => Err(())
                         }
@@ -174,8 +207,8 @@ pub fn gradio_api(args: TokenStream, input: TokenStream) -> TokenStream {
                 }
 
                 impl #struct_name {
-                    pub async fn new(options: gradio::ClientOptions) -> Result<Self, ()> {
-                        match gradio::Client::new(#url, options).await {
+                    pub async fn new() -> Result<Self, ()> {
+                        match gradio::Client::new(#url, #grad_opts_ts).await {
                             Ok(client) => Ok(Self { client }),
                             Err(_) => Err(())
                         }

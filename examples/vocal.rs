@@ -75,7 +75,7 @@ async fn download_file(file: gradio::GradioFileData, filename: &str) {
 async fn main(){
     println!("Vocal Separation");
     println!("Warning. This example doesn't work for me. The api doesn't work fine and refuses to separate vocals.");
-    let vocal = VocalSeparation::new(gradio::ClientOptions::default()).await.unwrap();
+    let vocal = VocalSeparation::new().await.unwrap();
     let mut task = vocal.separate_background("wavs/tunisia.wav", "BS-RoFormer").await.unwrap();
     let result = show_progress(&mut task).await.expect("Failed to separate vocals");
     // the result is vec of files. 0 is vocals, 1 is background
