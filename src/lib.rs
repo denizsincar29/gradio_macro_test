@@ -26,6 +26,9 @@ fn make_compile_error(message: &str) -> TokenStream {
 /// - `option`: **Required**. Specifies whether the generated API methods should be synchronous or asynchronous.
 ///   - `"sync"`: Generates synchronous methods for interacting with the API.
 ///   - `"async"`: Generates asynchronous methods for interacting with the API.
+/// - `hf_token` (optional): huggingface space token.
+/// - `auth_username` (optional): huggingface username.
+/// - `auth_password` (optional): huggingface password.
 ///
 /// # Usage
 ///
