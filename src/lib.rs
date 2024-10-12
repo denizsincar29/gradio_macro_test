@@ -145,33 +145,33 @@ pub fn gradio_api(args: TokenStream, input: TokenStream) -> TokenStream {
             let arg_type: proc_macro2::TokenStream = if is_file {
                 quote! { impl Into<std::path::PathBuf> }
             } else {
-                quote! { impl serde::Serialize }
+                quote! { impl gradio::serde::Serialize }
             };
             (quote! { #arg_ident: #arg_type },
             if is_file { quote! { gradio::PredictionInput::from_file(#arg_ident) } }
             else { quote! { gradio::PredictionInput::from_value(#arg_ident) } })
-        }).collect();
+        }).unzip();
 
         // Create sync or async functions depending on the `option`
         let function: TokenStream = match option {
             Syncity::Sync => {
                 quote! {
-                    pub fn #method_name(&self, #(#args),*) -> Result<Vec<gradio::PredictionOutput>, anyhow::Error> {
+                    pub fn #method_name(&self, #(#args),*) -> Result<Vec<gradio::PredictionOutput>, gradio::anyhow::Error> {
                         self.client.predict_sync(#name, vec![#(#args_call.into()),*])
                     }
 
-                    pub fn #background_name(&self, #(#args),*) -> Result<gradio::PredictionStream, anyhow::Error> {
+                    pub fn #background_name(&self, #(#args),*) -> Result<gradio::PredictionStream, gradio::anyhow::Error> {
                         self.client.submit_sync(#name, vec![#(#args_call.into()),*])
                     }
                 }
             },
             Syncity::Async => {
                 quote! {
-                    pub async fn #method_name(&self, #(#args),*) -> Result<Vec<gradio::PredictionOutput>, anyhow::Error> {
+                    pub async fn #method_name(&self, #(#args),*) -> Result<Vec<gradio::PredictionOutput>, gradio::anyhow::Error> {
                         self.client.predict(#name, vec![#(#args_call.into()),*]).await
                     }
 
-                    pub async fn #background_name(&self, #(#args),*) -> Result<gradio::PredictionStream, anyhow::Error> {
+                    pub async fn #background_name(&self, #(#args),*) -> Result<gradio::PredictionStream, gradio::anyhow::Error> {
                         self.client.submit(#name, vec![#(#args_call.into()),*]).await
                     }
                 }
