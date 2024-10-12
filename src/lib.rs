@@ -150,7 +150,7 @@ pub fn gradio_api(args: TokenStream, input: TokenStream) -> TokenStream {
             (quote! { #arg_ident: #arg_type },
             if is_file { quote! { gradio::PredictionInput::from_file(#arg_ident) } }
             else { quote! { gradio::PredictionInput::from_value(#arg_ident) } })
-        }).collect();
+        }).unzip();
 
         // Create sync or async functions depending on the `option`
         let function: TokenStream = match option {
