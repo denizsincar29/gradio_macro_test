@@ -192,12 +192,21 @@ pub fn gradio_api(args: TokenStream, input: TokenStream) -> TokenStream {
                 }
 
                 impl #struct_name {
-                    pub fn new_sync() -> Result<Self, ()> {
+                    pub fn new() -> Result<Self, ()> {
                         match gradio::Client::new_sync(#url, #grad_opts_ts) {
                             Ok(client) => Ok(Self { client }),
                             Err(_) => Err(())
                         }
                     }
+
+                    pub fn custom_endpoint(&self, endpoint: &str, arguments: Vec<gradio::PredictionInput>) -> Result<Vec<gradio::PredictionOutput>, gradio::anyhow::Error> {
+                        self.client.predict_sync(endpoint, arguments)
+                    }
+
+                    pub fn custom_endpoint_background(&self, endpoint: &str, arguments: Vec<gradio::PredictionInput>) -> Result<gradio::PredictionStream, gradio::anyhow::Error> {
+                        self.client.submit_sync(endpoint, arguments)
+                    }
+
 
                     #(#functions)*
                 }
@@ -215,6 +224,14 @@ pub fn gradio_api(args: TokenStream, input: TokenStream) -> TokenStream {
                             Ok(client) => Ok(Self { client }),
                             Err(_) => Err(())
                         }
+                    }
+
+                    pub async fn custom_endpoint(&self, endpoint: &str, arguments: Vec<gradio::PredictionInput>) -> Result<Vec<gradio::PredictionOutput>, gradio::anyhow::Error> {
+                        self.client.predict(endpoint, arguments).await
+                    }
+
+                    pub async fn custom_endpoint_background(&self, endpoint: &str, arguments: Vec<gradio::PredictionInput>) -> Result<gradio::PredictionStream, gradio::anyhow::Error> {
+                        self.client.submit(endpoint, arguments).await
                     }
 
                     #(#functions)*

@@ -1,0 +1,119 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug example 'llama'",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--example=llama",
+                    "--package=gradio_macro"
+                ],
+                "filter": {
+                    "name": "llama",
+                    "kind": "example"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in example 'llama'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--example=llama",
+                    "--package=gradio_macro"
+                ],
+                "filter": {
+                    "name": "llama",
+                    "kind": "example"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug example 'vocal'",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--example=vocal",
+                    "--package=gradio_macro"
+                ],
+                "filter": {
+                    "name": "vocal",
+                    "kind": "example"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in example 'vocal'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--example=vocal",
+                    "--package=gradio_macro"
+                ],
+                "filter": {
+                    "name": "vocal",
+                    "kind": "example"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug example 'whisper'",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--example=whisper",
+                    "--package=gradio_macro"
+                ],
+                "filter": {
+                    "name": "whisper",
+                    "kind": "example"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in example 'whisper'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--example=whisper",
+                    "--package=gradio_macro"
+                ],
+                "filter": {
+                    "name": "whisper",
+                    "kind": "example"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        }
+    ]
+}
